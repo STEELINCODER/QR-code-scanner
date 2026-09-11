@@ -1,0 +1,16 @@
+# Block local temporary builds
+build/
+.idea/
+.vscode/
+*.o
+*.a
+*.so
+*.pgm
+
+# Block build logs from testing directories
+tests/build/
+
+# ONLY ignore temporary compilation artifacts inside third_party, NOT the source code itself
+third_party/**/build/
+third_party/**/*.o
+third_party/**/*.a
