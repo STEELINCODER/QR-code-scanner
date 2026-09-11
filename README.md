@@ -12,18 +12,18 @@ Its like learning how to make a car, to shave off a few seconds in traffic 😭�
 
 ---
 
-## 📐 Core Architecture & Algorithmic Math (IGNORE IT IF YOU HATE MATH)
+## 1) Core Architecture & Algorithmic Math (IGNORE IT IF YOU HATE MATH)
 
 Instead of passing heavy image data through high-level Java or Kotlin abstraction layers (which introduces performance penalties and stutters from Android’s Garbage Collector), QRFastPay drops raw grayscale camera pixel buffers directly down to a native C pipeline via the **JNI (Java Native Interface)** bridge.
 
-### 1. Vectorized Luminance Transformation (Color to Grayscale)
+### i). Vectorized Luminance Transformation (Color to Grayscale)
 The engine processes incoming YUV/RGB camera streams by flattening frames into linear pixel arrays. To convert standard RGB frames to grayscale efficiently, the pipeline implements standard colorimetric luminance weighting vectors. The low-level mathematical operation for each pixel is defined as:
 
 \[Y = 0.299R + 0.587G + 0.114B\]
 
 In the native core, these floating-point operations are converted to high-performance integer math by scaling the weights by 256 (77 ≈ 256 × 0.299, 150 ≈ 256 × 0.587, 29 ≈ 256 × 0.114). The values are processed across 64-bit and 128-bit vector lanes simultaneously, ensuring zero-heap runtime memory allocation.
 
-### 2. O(Width) Rolling Integral Adaptive Binarization
+### ii). O(Width) Rolling Integral Adaptive Binarization
 To handle diverse real-world lighting conditions at merchant checkouts, the engine implements a custom C version of **Bradley Local-Mean Adaptive Thresholding**. 
 
 Standard adaptive binarization algorithms calculate a full 2D Integral Image (Sat), requiring O(Width × Height) storage allocations. QRFastPay eliminates this memory overhead entirely by maintaining a rolling column-sum buffer. It calculates a moving average of a spatial window S × S around each pixel, binarizing the image on-the-fly:
@@ -36,11 +36,11 @@ This optimization allows the entire thresholding step to pass through the image 
 
 ---
 
-## 🛠️ Native NDK Toolchain & Technical Fixes (Read this if you have any cross compatibility issues bro)
+## 2 Native NDK Toolchain & Technical Fixes (Read this if you have any cross compatibility issues bro)
 
 During the system engineering and compilation setup, multiple cross-platform architecture blockers were identified and systematically resolved:
 
-### 1. CMake Cross-Compilation 
+### i). CMake Cross-Compilation 
 
 Standard Android NDK build systems evaluate relative directory structures blindly from deep generated internal workspace directories (such as `.cxx/Debug/2l62296u/arm64-v8a`). To prevent relative folder out-of-bounds compilation failures on Windows host systems, absolute path resolution targets are anchored dynamically using `get_filename_component`:
 
@@ -52,7 +52,7 @@ get_filename_component(QRFAST_ROOT "${ANDROID_APP_DIR}/../../.." ABSOLUTE)
 set(QUIRC_DIR "${QRFAST_ROOT}/third_party/quirc")
 ```
 
-### 2. ARM NEON Intrinsic Vector Realignment (Bro just ignore this for now)
+### ii). ARM NEON Intrinsic Vector Realignment (Bro just ignore this for now)
 
 The core file `qrfast.c` accelerates binarization using SIMD (Single Instruction, Multiple Data) processing loops. Because the ARM hardware profile lacks a widening scalar-multiplication variant (`_n_`) for 8-bit unsigned matrices, channel weights are duplicated across vector registers using `vdup_n_u8` before executing long widening operations (`vmull_u8` / `vmlal_u8`):
 
@@ -76,7 +76,7 @@ Additionally, architecture inclusions are sandboxed inside preprocessor macro ch
 
 ---
 
-## 📂 Project Directory Structure (Yeah i forked some code but have given proper credits thanks to whoever made it possible ❤️❤️)
+## 3) Project Directory Structure (Yeah i forked some code but have given proper credits thanks to whoever made it possible ❤️❤️)
 
 ```text
 qrfast/
@@ -103,7 +103,7 @@ qrfast/
 
 ---
 
-## 🔗 Native Intent Payment Routing (ITs the pipeline of what happens) also IOS users are gonna cry they dont have usb debugging option
+## 4) Native Intent Payment Routing (ITs the pipeline of what happens) also IOS users are gonna cry they dont have usb debugging option
 
 Once the underlying `quirc` engine reads alignment grids, straightens perspective distortion, and decodes the string data matrix, it extracts a standard raw `upi://pay?...` URI scheme string. 
 
@@ -119,14 +119,14 @@ This bypasses payment aggregators or middleman code architectures, prompting the
 
 ---
 
-## 📦 How do you deploy bro??
+## 5) How do you deploy bro??
 
-### Prerequisites
+### i) Prerequisites
 * **Android Studio** (Ladybug/Quail or later)
 * **Android NDK** (Version 28.2.13676358 or later)
 * **Physical Target Device** (e.g., Samsung Galaxy M31s) <-- my phone; me becoming developer to solve issues of my phone 😭😭 configured with **USB Debugging** active under Developer Options.
 
-### Compilation Pipeline Execution
+### ii) Compilation Pipeline Execution
 Open your terminal inside the application environment folder, wipe out any generated cross-compilation workspace memories, and push the optimized package to the device:
 
 ```bash
