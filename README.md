@@ -1,10 +1,18 @@
-# QRFastPay Engine ⚡
+# QRFastPay App
 
 A high-performance, ultra-lightweight native Android QR code scanning engine optimized for instant mobile payment routing. This application sidesteps modern bloatware architectures by combining a bare-metal C core with hardware-level ARM NEON vector register acceleration to minimize end-to-end transaction processing latency.
 
+Well I have had my fair share of embarrassed moments when the payment didn't even scan, I was mad on the developers for making an app which didn't even load.
+
+# So what am i doing here?? 
+
+I have created this app such that you can immediately open this app, and scan the qr, 0 bloatware, this leads you to an external UPI app which has the preloaded information of the recipients payment details hence you can directly login and pay, no latency.
+
+Its like learning how to make a car, to shave off a few seconds in traffic 😭😭😭
+
 ---
 
-## 📐 Core Architecture & Algorithmic Math
+## 📐 Core Architecture & Algorithmic Math (IGNORE IT IF YOU HATE MATH)
 
 Instead of passing heavy image data through high-level Java or Kotlin abstraction layers (which introduces performance penalties and stutters from Android’s Garbage Collector), QRFastPay drops raw grayscale camera pixel buffers directly down to a native C pipeline via the **JNI (Java Native Interface)** bridge.
 
@@ -28,11 +36,12 @@ This optimization allows the entire thresholding step to pass through the image 
 
 ---
 
-## 🛠️ Native NDK Toolchain & Technical Fixes
+## 🛠️ Native NDK Toolchain & Technical Fixes (Read this if you have any cross compatibility issues bro)
 
 During the system engineering and compilation setup, multiple cross-platform architecture blockers were identified and systematically resolved:
 
-### 1. Robust CMake Cross-Compilation Path Resolution
+### 1. CMake Cross-Compilation 
+
 Standard Android NDK build systems evaluate relative directory structures blindly from deep generated internal workspace directories (such as `.cxx/Debug/2l62296u/arm64-v8a`). To prevent relative folder out-of-bounds compilation failures on Windows host systems, absolute path resolution targets are anchored dynamically using `get_filename_component`:
 
 ```cmake
@@ -43,7 +52,8 @@ get_filename_component(QRFAST_ROOT "${ANDROID_APP_DIR}/../../.." ABSOLUTE)
 set(QUIRC_DIR "${QRFAST_ROOT}/third_party/quirc")
 ```
 
-### 2. ARM NEON Intrinsic Vector Realignment
+### 2. ARM NEON Intrinsic Vector Realignment (Bro just ignore this for now)
+
 The core file `qrfast.c` accelerates binarization using SIMD (Single Instruction, Multiple Data) processing loops. Because the ARM hardware profile lacks a widening scalar-multiplication variant (`_n_`) for 8-bit unsigned matrices, channel weights are duplicated across vector registers using `vdup_n_u8` before executing long widening operations (`vmull_u8` / `vmlal_u8`):
 
 ```c
@@ -66,7 +76,7 @@ Additionally, architecture inclusions are sandboxed inside preprocessor macro ch
 
 ---
 
-## 📂 Project Directory Structure
+## 📂 Project Directory Structure (Yeah i forked some code but have given proper credits thanks to whoever made it possible ❤️❤️)
 
 ```text
 qrfast/
@@ -93,7 +103,7 @@ qrfast/
 
 ---
 
-## 🔗 Native Intent Payment Routing
+## 🔗 Native Intent Payment Routing (ITs the pipeline of what happens) also IOS users are gonna cry they dont have usb debugging option
 
 Once the underlying `quirc` engine reads alignment grids, straightens perspective distortion, and decodes the string data matrix, it extracts a standard raw `upi://pay?...` URI scheme string. 
 
@@ -109,12 +119,12 @@ This bypasses payment aggregators or middleman code architectures, prompting the
 
 ---
 
-## 📦 Local Deployment Blueprint
+## 📦 How do you deploy bro??
 
 ### Prerequisites
 * **Android Studio** (Ladybug/Quail or later)
 * **Android NDK** (Version 28.2.13676358 or later)
-* **Physical Target Device** (e.g., Samsung Galaxy M31s) configured with **USB Debugging** active under Developer Options.
+* **Physical Target Device** (e.g., Samsung Galaxy M31s) <-- my phone; me becoming developer to solve issues of my phone 😭😭 configured with **USB Debugging** active under Developer Options.
 
 ### Compilation Pipeline Execution
 Open your terminal inside the application environment folder, wipe out any generated cross-compilation workspace memories, and push the optimized package to the device:
@@ -129,3 +139,5 @@ cd android
 # Compile native binary assets and flash to phone over USB debugging
 ./gradlew.bat installDebug --no-configuration-cache
 ```
+
+The code works bro trust me !!!!
